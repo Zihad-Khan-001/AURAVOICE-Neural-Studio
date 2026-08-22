@@ -29,4 +29,8 @@ class NativeAudioEngine {
     external fun nativeIsInitialized(): Boolean
 
     external fun nativeIsRunning(): Boolean
+
+    external fun nativeGetLatestPeak(): Float
+
+    external fun nativeGetLatestRms(): Float
 }
