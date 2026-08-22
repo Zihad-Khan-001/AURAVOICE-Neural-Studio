@@ -3,6 +3,7 @@ package com.auravoice.audioengine
 class NativeAudioEngine {
 
     companion object {
+
         init {
             System.loadLibrary("auravoice_audio")
         }
@@ -15,6 +16,16 @@ class NativeAudioEngine {
     ): Boolean
 
     external fun nativeStart(): Boolean
+
+    external fun nativeStartRecording(
+        filePath: String
+    ): Boolean
+
+    external fun nativePauseRecording()
+
+    external fun nativeResumeRecording()
+
+    external fun nativeStopRecording()
 
     external fun nativeStop()
 
@@ -29,6 +40,10 @@ class NativeAudioEngine {
     external fun nativeIsInitialized(): Boolean
 
     external fun nativeIsRunning(): Boolean
+
+    external fun nativeIsRecording(): Boolean
+
+    external fun nativeIsPaused(): Boolean
 
     external fun nativeGetLatestPeak(): Float
 
