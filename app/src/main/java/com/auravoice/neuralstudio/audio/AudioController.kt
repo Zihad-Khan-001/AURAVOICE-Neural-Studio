@@ -1,7 +1,12 @@
 package com.auravoice.neuralstudio.audio
 
 import android.content.Context
+import android.os.Environment
 import com.auravoice.audioengine.NativeAudioEngine
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class AudioController(
     private val context: Context
@@ -11,6 +16,8 @@ class AudioController(
         NativeAudioEngine()
 
     private var initialized = false
+
+    private var currentRecordingFile: File? = null
 
     fun initialize(): Boolean {
 
@@ -38,25 +45,71 @@ class AudioController(
             }
         }
 
-        return nativeEngine.nativeStart()
+        val recordingsDirectory =
+            File(
+                context.getExternalFilesDir(
+                    Environment.DIRECTORY_MUSIC
+                ),
+                "Auravoice/Recordings"
+            )
+
+        if (!recordingsDirectory.exists()) {
+            recordingsDirectory.mkdirs()
+        }
+
+        val timestamp =
+            SimpleDateFormat(
+                "yyyyMMdd_HHmmss",
+                Locale.US
+            ).format(Date())
+
+        val file =
+            File(
+                recordingsDirectory,
+                "Auravoice_$timestamp.wav"
+            )
+
+        val started =
+            nativeEngine.nativeStartRecording(
+                file.absolutePath
+            )
+
+        if (started) {
+            currentRecordingFile = file
+        }
+
+        return started
     }
 
     fun pauseRecording() {
 
-        /*
-         * True native pause will be connected
-         * with the recording state machine
-         * in the next audio-engine step.
-         */
-        nativeEngine.nativeStop()
+        nativeEngine.nativePauseRecording()
     }
 
     fun resumeRecording(): Boolean {
 
-        return nativeEngine.nativeStart()
+        nativeEngine.nativeResumeRecording()
+
+        return true
     }
 
     fun stopRecording() {
+
+        nativeEngine.nativeStopRecording()
+    }
+
+    fun startPreviewStream(): Boolean {
+
+        if (!initialized) {
+            if (!initialize()) {
+                return false
+            }
+        }
+
+        return nativeEngine.nativeStart()
+    }
+
+    fun stopPreviewStream() {
 
         nativeEngine.nativeStop()
     }
@@ -90,9 +143,19 @@ class AudioController(
         return nativeEngine.nativeIsRunning()
     }
 
-    fun isInitialized(): Boolean {
+    fun isRecording(): Boolean {
 
-        return nativeEngine.nativeIsInitialized()
+        return nativeEngine.nativeIsRecording()
+    }
+
+    fun isPaused(): Boolean {
+
+        return nativeEngine.nativeIsPaused()
+    }
+
+    fun getCurrentRecordingFile(): File? {
+
+        return currentRecordingFile
     }
 
     fun release() {
@@ -100,5 +163,7 @@ class AudioController(
         nativeEngine.nativeRelease()
 
         initialized = false
+
+        currentRecordingFile = null
     }
 }
