@@ -36,4 +36,6 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
+
+    implementation("com.google.oboe:oboe:1.10.0")
 }
