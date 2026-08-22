@@ -1,5 +1,6 @@
 package com.auravoice.neuralstudio.ui.studio
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.auravoice.neuralstudio.audio.AudioController
 import kotlinx.coroutines.delay
+import kotlin.math.max
+import kotlin.math.min
 
 private val StudioBackground = Color(0xFF0F0F12)
 private val StudioCard = Color(0xFF1C1C1E)
@@ -78,6 +81,14 @@ fun StudioScreen(
         mutableFloatStateOf(0f)
     }
 
+    var rmsLevel by remember {
+        mutableFloatStateOf(0f)
+    }
+
+    val visualizerBars = remember {
+        FloatArray(64)
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             controller.release()
@@ -85,11 +96,27 @@ fun StudioScreen(
     }
 
     LaunchedEffect(isRecording, isPaused) {
-        while (isRecording && !isPaused) {
-            delay(50)
 
-            peakLevel = controller.getPeakLevel()
-            elapsedMillis += 50
+        while (isRecording && !isPaused) {
+
+            delay(33)
+
+            val peak =
+                controller.getPeakLevel()
+
+            val rms =
+                controller.getRmsLevel()
+
+            peakLevel = peak
+            rmsLevel = rms
+
+            updateVisualizerBars(
+                bars = visualizerBars,
+                peak = peak,
+                rms = rms
+            )
+
+            elapsedMillis += 33
         }
     }
 
@@ -97,6 +124,7 @@ fun StudioScreen(
         modifier = modifier.fillMaxSize(),
         color = StudioBackground
     ) {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -104,7 +132,8 @@ fun StudioScreen(
                     horizontal = 16.dp,
                     vertical = 12.dp
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
 
             Text(
@@ -131,13 +160,16 @@ fun StudioScreen(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
                 ) {
 
                     Text(
-                        text = formatTime(elapsedMillis),
+                        text =
+                            formatTime(elapsedMillis),
                         color = Color.White,
                         fontSize = 36.sp,
                         fontWeight = FontWeight.Light
@@ -147,16 +179,51 @@ fun StudioScreen(
                         modifier = Modifier.height(12.dp)
                     )
 
-                    AudioVisualizer(
-                        level = peakLevel
+                    RealTimeVisualizer(
+                        bars = visualizerBars
                     )
 
                     Spacer(
-                        modifier = Modifier.height(12.dp)
+                        modifier = Modifier.height(10.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
+                    ) {
+
+                        Text(
+                            text = "PEAK",
+                            color = Color.LightGray,
+                            fontSize = 10.sp
+                        )
+
+                        Text(
+                            text = formatLevel(peakLevel),
+                            color = NeonCyan,
+                            fontSize = 10.sp
+                        )
+
+                        Text(
+                            text = "RMS",
+                            color = Color.LightGray,
+                            fontSize = 10.sp
+                        )
+
+                        Text(
+                            text = formatLevel(rmsLevel),
+                            color = NeonCyan,
+                            fontSize = 10.sp
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(10.dp)
                     )
 
                     Text(
-                        text = "48 kHz • 24-bit • PCM",
+                        text = "48 kHz • 24-bit • 256 frames",
                         color = Color.LightGray,
                         fontSize = 12.sp
                     )
@@ -171,8 +238,10 @@ fun StudioScreen(
                 shape = RoundedCornerShape(50.dp),
                 color = StudioCard
             ) {
+
                 Text(
-                    text = "Boya BY-M1 Profile Calibrated",
+                    text =
+                        "Boya BY-M1 Profile Calibrated",
                     color = NeonCyan,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
@@ -194,6 +263,7 @@ fun StudioScreen(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Column(
                     modifier = Modifier.padding(14.dp)
                 ) {
@@ -208,17 +278,22 @@ fun StudioScreen(
                     Slider(
                         value = inputGain,
                         onValueChange = {
+
                             inputGain = it
-                            controller.setInputGain(it)
+
+                            controller.setInputGain(
+                                it
+                            )
                         },
                         valueRange = 0f..2f
                     )
 
                     Text(
-                        text = String.format(
-                            "%.2fx",
-                            inputGain
-                        ),
+                        text =
+                            String.format(
+                                "%.2fx",
+                                inputGain
+                            ),
                         color = NeonCyan,
                         fontSize = 12.sp
                     )
@@ -231,21 +306,32 @@ fun StudioScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement =
+                    Arrangement.Center,
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 IconButton(
                     onClick = {
-                        if (isRecording && !isPaused) {
+
+                        if (
+                            isRecording &&
+                            !isPaused
+                        ) {
+
                             controller.pauseRecording()
+
                             isPaused = true
                         }
                     }
                 ) {
+
                     Icon(
-                        imageVector = Icons.Default.Pause,
-                        contentDescription = "Pause",
+                        imageVector =
+                            Icons.Default.Pause,
+                        contentDescription =
+                            "Pause",
                         tint = Color.White
                     )
                 }
@@ -255,18 +341,22 @@ fun StudioScreen(
                 )
 
                 IconButton(
-                    modifier = Modifier.background(
-                        color = CoralRed,
-                        shape = RoundedCornerShape(50)
-                    ),
+                    modifier = Modifier
+                        .background(
+                            color = CoralRed,
+                            shape =
+                                RoundedCornerShape(50)
+                        ),
                     onClick = {
 
                         if (!isRecording) {
 
                             val started =
-                                controller.startRecording()
+                                controller
+                                    .startRecording()
 
                             if (started) {
+
                                 isRecording = true
                                 isPaused = false
                                 elapsedMillis = 0L
@@ -275,7 +365,8 @@ fun StudioScreen(
                         } else if (isPaused) {
 
                             val resumed =
-                                controller.resumeRecording()
+                                controller
+                                    .resumeRecording()
 
                             if (resumed) {
                                 isPaused = false
@@ -283,6 +374,7 @@ fun StudioScreen(
                         }
                     }
                 ) {
+
                     Icon(
                         imageVector =
                             if (isPaused) {
@@ -290,7 +382,8 @@ fun StudioScreen(
                             } else {
                                 Icons.Default.FiberManualRecord
                             },
-                        contentDescription = "Record",
+                        contentDescription =
+                            "Record",
                         tint = Color.White
                     )
                 }
@@ -301,16 +394,24 @@ fun StudioScreen(
 
                 IconButton(
                     onClick = {
+
                         controller.stopRecording()
 
                         isRecording = false
                         isPaused = false
                         elapsedMillis = 0L
+
+                        visualizerBars.fill(0f)
+                        peakLevel = 0f
+                        rmsLevel = 0f
                     }
                 ) {
+
                     Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop",
+                        imageVector =
+                            Icons.Default.Stop,
+                        contentDescription =
+                            "Stop",
                         tint = Color.White
                     )
                 }
@@ -327,6 +428,7 @@ fun StudioScreen(
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Column(
                     modifier = Modifier.padding(14.dp)
                 ) {
@@ -344,7 +446,8 @@ fun StudioScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement =
+                            Arrangement.Center
                     ) {
 
                         Button(
@@ -370,42 +473,127 @@ fun StudioScreen(
 }
 
 @Composable
-private fun AudioVisualizer(
-    level: Float
+private fun RealTimeVisualizer(
+    bars: FloatArray
 ) {
-    Row(
+
+    Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+            .height(100.dp)
     ) {
 
-        repeat(64) { index ->
+        val count = 64
 
-            val variation =
-                ((index * 37) % 100) / 100f
+        val gap = 2.0f
 
-            val normalizedLevel =
-                level.coerceIn(0f, 1f)
+        val totalGap =
+            gap * (count - 1)
 
-            val barHeight =
-                (
-                    12f +
-                    normalizedLevel * 62f *
-                    (0.45f + variation * 0.55f)
-                ).coerceAtMost(78f)
+        val barWidth =
+            (size.width - totalGap) / count
 
-            Spacer(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(barHeight.dp)
-                    .background(
-                        color = NeonCyan,
-                        shape = RoundedCornerShape(4.dp)
+        val centerY =
+            size.height / 2f
+
+        for (i in 0 until count) {
+
+            val level =
+                bars.getOrNull(i)
+                    ?.coerceIn(0f, 1f)
+                    ?: 0f
+
+            val maxHeight =
+                size.height * 0.90f
+
+            val minHeight =
+                size.height * 0.06f
+
+            val height =
+                minHeight +
+                    (
+                        maxHeight - minHeight
+                    ) * level
+
+            val left =
+                i * (barWidth + gap)
+
+            val top =
+                centerY - height / 2f
+
+            drawRoundRect(
+                color = NeonCyan,
+                topLeft =
+                    androidx.compose.ui.geometry.Offset(
+                        left,
+                        top
+                    ),
+                size =
+                    androidx.compose.ui.geometry.Size(
+                        barWidth,
+                        height
+                    ),
+                cornerRadius =
+                    androidx.compose.ui.geometry.CornerRadius(
+                        barWidth / 2f,
+                        barWidth / 2f
                     )
             )
         }
+    }
+}
+
+private fun updateVisualizerBars(
+    bars: FloatArray,
+    peak: Float,
+    rms: Float
+) {
+
+    val safePeak =
+        peak.coerceIn(0f, 1f)
+
+    val safeRms =
+        rms.coerceIn(0f, 1f)
+
+    val base =
+        max(
+            safeRms * 3.5f,
+            safePeak
+        ).coerceIn(0f, 1f)
+
+    for (i in bars.indices) {
+
+        val centerDistance =
+            kotlin.math.abs(
+                i - (bars.size - 1) / 2f
+            )
+
+        val shape =
+            1f -
+                min(
+                    centerDistance /
+                        (bars.size / 2f),
+                    1f
+                ) * 0.25f
+
+        val target =
+            (base * shape)
+                .coerceIn(0f, 1f)
+
+        val current =
+            bars[i]
+
+        bars[i] =
+            if (target > current) {
+
+                current * 0.35f +
+                    target * 0.65f
+
+            } else {
+
+                current * 0.78f +
+                    target * 0.22f
+            }
     }
 }
 
@@ -430,5 +618,26 @@ private fun formatTime(
         minutes,
         seconds,
         millis
+    )
+}
+
+private fun formatLevel(
+    value: Float
+): String {
+
+    val safe =
+        value.coerceIn(0f, 1f)
+
+    val db =
+        if (safe <= 0.00001f) {
+            -60f
+        } else {
+            (20f * kotlin.math.log10(safe))
+                .coerceAtLeast(-60f)
+        }
+
+    return String.format(
+        "%.1f dBFS",
+        db
     )
 }
