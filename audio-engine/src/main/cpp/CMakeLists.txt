@@ -27,7 +27,7 @@ target_compile_options(
     -Wextra
     -Wpedantic
 )
-
+find_package(oboe REQUIRED CONFIG)
 find_library(
     log-lib
     log
@@ -40,6 +40,7 @@ find_library(
 
 target_link_libraries(
     auravoice_audio
+    oboe::oboe
     ${log-lib}
     ${android-lib}
 )
