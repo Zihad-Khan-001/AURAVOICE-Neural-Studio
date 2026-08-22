@@ -6,18 +6,27 @@ android {
     namespace = "com.auravoice.audioengine"
     compileSdk = 37
 
+    buildFeatures {
+        prefab = true
+    }
+
     defaultConfig {
         minSdk = 27
 
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++20"
+                arguments += "-DANDROID_STL=c++_shared"
             }
         }
     }
 
     buildTypes {
         release {
+            isMinifyEnabled = false
+        }
+
+        debug {
             isMinifyEnabled = false
         }
     }
