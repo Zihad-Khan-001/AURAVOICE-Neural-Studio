@@ -11,7 +11,6 @@ class AudioController(
         NativeAudioEngine()
 
     private var initialized = false
-    private var paused = false
 
     fun initialize(): Boolean {
 
@@ -21,7 +20,7 @@ class AudioController(
 
         val result =
             nativeEngine.nativeInitialize(
-                48_000,
+                48000,
                 1,
                 256
             )
@@ -39,55 +38,36 @@ class AudioController(
             }
         }
 
-        paused = false
-
         return nativeEngine.nativeStart()
     }
 
     fun pauseRecording() {
 
-        if (!initialized) {
-            return
-        }
-
-        if (!nativeEngine.nativeIsRunning()) {
-            return
-        }
-
+        /*
+         * True native pause will be connected
+         * with the recording state machine
+         * in the next audio-engine step.
+         */
         nativeEngine.nativeStop()
-
-        paused = true
     }
 
     fun resumeRecording(): Boolean {
-
-        if (!initialized) {
-            return false
-        }
-
-        paused = false
 
         return nativeEngine.nativeStart()
     }
 
     fun stopRecording() {
 
-        if (!initialized) {
-            return
-        }
-
         nativeEngine.nativeStop()
-
-        paused = false
     }
 
-    fun setInputGain(gain: Float) {
+    fun setInputGain(
+        gain: Float
+    ) {
 
-        if (!initialized) {
-            initialize()
-        }
-
-        nativeEngine.nativeSetInputGain(gain)
+        nativeEngine.nativeSetInputGain(
+            gain
+        )
     }
 
     fun getInputGain(): Float {
@@ -105,25 +85,20 @@ class AudioController(
         return nativeEngine.nativeGetLatestRms()
     }
 
-    fun isRecording(): Boolean {
+    fun isRunning(): Boolean {
 
         return nativeEngine.nativeIsRunning()
     }
 
-    fun isPaused(): Boolean {
+    fun isInitialized(): Boolean {
 
-        return paused
+        return nativeEngine.nativeIsInitialized()
     }
 
     fun release() {
 
-        if (!initialized) {
-            return
-        }
-
         nativeEngine.nativeRelease()
 
         initialized = false
-        paused = false
     }
 }
