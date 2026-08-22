@@ -16,7 +16,6 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++20"
-                arguments += "-DANDROID_STL=c++_shared"
             }
         }
     }
@@ -34,6 +33,7 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
+            arguments("-DANDROID_STL=c++_shared")
         }
     }
 
@@ -45,6 +45,5 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
-
     implementation("com.google.oboe:oboe:1.10.0")
 }
