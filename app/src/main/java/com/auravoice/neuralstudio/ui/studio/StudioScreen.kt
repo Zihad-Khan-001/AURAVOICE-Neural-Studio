@@ -43,18 +43,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.auravoice.neuralstudio.audio.AudioController
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private val StudioBackground = Color(0xFF0F0F12)
-private val StudioCard = Color(0xFF1C1C1E)
-private val CoralRed = Color(0xFFFF4757)
-private val NeonCyan = Color(0xFF00E5CC)
+private val StudioBackground =
+    Color(0xFF0F0F12)
+
+private val StudioCard =
+    Color(0xFF1C1C1E)
+
+private val CoralRed =
+    Color(0xFFFF4757)
+
+private val NeonCyan =
+    Color(0xFF00E5CC)
 
 @Composable
 fun StudioScreen(
     modifier: Modifier = Modifier
 ) {
+
     val context = LocalContext.current
 
     val controller = remember {
@@ -90,14 +99,23 @@ fun StudioScreen(
     }
 
     DisposableEffect(Unit) {
+
+        controller.initialize()
+
         onDispose {
             controller.release()
         }
     }
 
-    LaunchedEffect(isRecording, isPaused) {
+    LaunchedEffect(
+        isRecording,
+        isPaused
+    ) {
 
-        while (isRecording && !isPaused) {
+        while (
+            isRecording &&
+            !isPaused
+        ) {
 
             delay(33)
 
@@ -169,7 +187,9 @@ fun StudioScreen(
 
                     Text(
                         text =
-                            formatTime(elapsedMillis),
+                            formatTime(
+                                elapsedMillis
+                            ),
                         color = Color.White,
                         fontSize = 36.sp,
                         fontWeight = FontWeight.Light
@@ -188,7 +208,8 @@ fun StudioScreen(
                     )
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
                         horizontalArrangement =
                             Arrangement.SpaceBetween
                     ) {
@@ -200,7 +221,10 @@ fun StudioScreen(
                         )
 
                         Text(
-                            text = formatLevel(peakLevel),
+                            text =
+                                formatLevel(
+                                    peakLevel
+                                ),
                             color = NeonCyan,
                             fontSize = 10.sp
                         )
@@ -212,7 +236,10 @@ fun StudioScreen(
                         )
 
                         Text(
-                            text = formatLevel(rmsLevel),
+                            text =
+                                formatLevel(
+                                    rmsLevel
+                                ),
                             color = NeonCyan,
                             fontSize = 10.sp
                         )
@@ -223,7 +250,8 @@ fun StudioScreen(
                     )
 
                     Text(
-                        text = "48 kHz • 24-bit • 256 frames",
+                        text =
+                            "48 kHz • 24-bit • 256 frames",
                         color = Color.LightGray,
                         fontSize = 12.sp
                     )
@@ -358,8 +386,18 @@ fun StudioScreen(
                             if (started) {
 
                                 isRecording = true
+
                                 isPaused = false
+
                                 elapsedMillis = 0L
+
+                                peakLevel = 0f
+
+                                rmsLevel = 0f
+
+                                visualizerBars.fill(
+                                    0f
+                                )
                             }
 
                         } else if (isPaused) {
@@ -369,6 +407,7 @@ fun StudioScreen(
                                     .resumeRecording()
 
                             if (resumed) {
+
                                 isPaused = false
                             }
                         }
@@ -383,7 +422,11 @@ fun StudioScreen(
                                 Icons.Default.FiberManualRecord
                             },
                         contentDescription =
-                            "Record",
+                            if (isPaused) {
+                                "Resume"
+                            } else {
+                                "Record"
+                            },
                         tint = Color.White
                     )
                 }
@@ -395,14 +438,23 @@ fun StudioScreen(
                 IconButton(
                     onClick = {
 
-                        controller.stopRecording()
+                        if (isRecording) {
+
+                            controller.stopRecording()
+                        }
 
                         isRecording = false
+
                         isPaused = false
+
                         elapsedMillis = 0L
 
-                        visualizerBars.fill(0f)
+                        visualizerBars.fill(
+                            0f
+                        )
+
                         peakLevel = 0f
+
                         rmsLevel = 0f
                     }
                 ) {
@@ -445,7 +497,8 @@ fun StudioScreen(
                     )
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
                         horizontalArrangement =
                             Arrangement.Center
                     ) {
@@ -453,7 +506,10 @@ fun StudioScreen(
                         Button(
                             onClick = {}
                         ) {
-                            Text("RAW AUDIO")
+
+                            Text(
+                                text = "RAW AUDIO"
+                            )
                         }
 
                         Spacer(
@@ -463,7 +519,10 @@ fun StudioScreen(
                         Button(
                             onClick = {}
                         ) {
-                            Text("MASTERED")
+
+                            Text(
+                                text = "MASTERED"
+                            )
                         }
                     }
                 }
@@ -512,14 +571,16 @@ private fun RealTimeVisualizer(
             val height =
                 minHeight +
                     (
-                        maxHeight - minHeight
-                    ) * level
+                        maxHeight -
+                            minHeight
+                        ) * level
 
             val left =
                 i * (barWidth + gap)
 
             val top =
-                centerY - height / 2f
+                centerY -
+                    height / 2f
 
             drawRoundRect(
                 color = NeonCyan,
@@ -564,8 +625,9 @@ private fun updateVisualizerBars(
     for (i in bars.indices) {
 
         val centerDistance =
-            kotlin.math.abs(
-                i - (bars.size - 1) / 2f
+            abs(
+                i -
+                    (bars.size - 1) / 2f
             )
 
         val shape =
@@ -630,9 +692,17 @@ private fun formatLevel(
 
     val db =
         if (safe <= 0.00001f) {
+
             -60f
+
         } else {
-            (20f * kotlin.math.log10(safe))
+
+            (
+                20f *
+                    kotlin.math.log10(
+                        safe
+                    )
+                )
                 .coerceAtLeast(-60f)
         }
 
