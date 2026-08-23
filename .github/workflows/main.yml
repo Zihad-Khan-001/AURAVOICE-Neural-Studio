@@ -20,10 +20,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Fix Gradle Wrapper Distribution Version
+        run: |
+          mkdir -p gradle/wrapper
+          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle
+      - name: Setup Gradle Environment
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.10.2'
