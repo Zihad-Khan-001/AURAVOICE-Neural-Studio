@@ -1,7 +1,10 @@
 package com.auravoice.neuralstudio.audio
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Environment
+import androidx.core.content.ContextCompat
 import com.auravoice.audioengine.NativeAudioEngine
 import java.io.File
 import java.text.SimpleDateFormat
@@ -69,6 +72,8 @@ class AudioController(
                 "Auravoice_$timestamp.wav"
             )
 
+        startRecordingService()
+
         val started =
             nativeEngine.nativeStartRecording(
                 file.absolutePath
@@ -76,6 +81,8 @@ class AudioController(
 
         if (started) {
             currentRecordingFile = file
+        } else {
+            stopRecordingService()
         }
 
         return started
@@ -96,6 +103,8 @@ class AudioController(
     fun stopRecording() {
 
         nativeEngine.nativeStopRecording()
+
+        stopRecordingService()
     }
 
     fun startPreviewStream(): Boolean {
@@ -162,8 +171,44 @@ class AudioController(
 
         nativeEngine.nativeRelease()
 
+        stopRecordingService()
+
         initialized = false
 
         currentRecordingFile = null
+    }
+
+    private fun startRecordingService() {
+
+        val intent =
+            Intent(
+                context,
+                AudioRecordingService::class.java
+            )
+
+        if (Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.O
+        ) {
+
+            ContextCompat.startForegroundService(
+                context,
+                intent
+            )
+
+        } else {
+
+            context.startService(intent)
+        }
+    }
+
+    private fun stopRecordingService() {
+
+        val intent =
+            Intent(
+                context,
+                AudioRecordingService::class.java
+            )
+
+        context.stopService(intent)
     }
 }
