@@ -20,24 +20,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Fix Gradle Wrapper Distribution Version
-        run: |
-          mkdir -p gradle/wrapper
-          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle Environment
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.10.2'
+
+      - name: Force Generate Valid Gradle Wrapper File
+        run: |
+          mkdir -p gradle/wrapper
+          echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
+          echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+          
+          # Root directory-তে যদি অন্য কোনো ফোল্ডার থাকে সেটির ভিতরেও ফাইলটি নিশ্চিত করার জন্য:
+          find . -maxdepth 3 -type d -name "gradle" -exec mkdir -p {}/wrapper \;
+          find . -maxdepth 3 -type d -name "wrapper" -exec cp gradle/wrapper/gradle-wrapper.properties {}/gradle-wrapper.properties \;
 
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
